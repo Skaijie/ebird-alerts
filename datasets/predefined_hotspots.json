@@ -1,0 +1,269 @@
+[
+    {
+        "Hotspot Name":"BAMK",
+        "Coordinates":[1.363584, 103.841614],
+        "Region":"SG",
+        "Radius":1150,
+        "Nearest Station":"Ang Mo Kio",
+        "Aliases": ["Bishan Park", "BAMK", "Bishan-Ang", "Bishan Pond"]
+    }, {
+        "Hotspot Name":"BBNP",
+        "Coordinates":[1.349318, 103.764132],
+        "Region":"SG",
+        "Radius":450,
+        "Nearest Station":"Hume",
+        "Aliases": ["Bukit Batok Nature"]
+    }, {
+        "Hotspot Name":"Bida",
+        "Coordinates":[1.339852, 103.874419],
+        "Region":"SG",
+        "Radius":300,
+        "Nearest Station":"Woodleigh",
+        "Aliases": ["Bidadari"]
+    }, {
+        "Hotspot Name":"BTNR (Hindhede/RRNP)",
+        "Coordinates":[1.346406, 103.777954],
+        "Region":"SG",
+        "Radius":650,
+        "Nearest Station":"Beauty World",
+        "Aliases": ["Rifle Range", "Hindhede Nature"]
+    }, {
+        "Hotspot Name":"BTNR/Summit",
+        "Coordinates":[1.354461, 103.776343],
+        "Region":"SG",
+        "Radius":250,
+        "Nearest Station":"Beauty World",
+        "Aliases": ["Bukit Timah Nature", "BTNR", "Bukit Timah Hill"]
+    }, {
+        "Hotspot Name":"BTNR (SQ/Asas)",
+        "Coordinates":[1.356751, 103.770516],
+        "Region":"SG",
+        "Radius":250,
+        "Nearest Station":"Hume",
+        "Aliases": ["Singapore Quarry", "Sigapore Quarry"]
+    }, {
+        "Hotspot Name": "CBP/SUTD",
+        "Coordinates":[1.337718,  103.966815],
+        "Region": "SG",
+        "Radius": 650,
+        "Nearest Station": "Expo",
+        "Aliases": ["Changi Business", "International Business Park", "SUTD"]
+    }, {
+        "Hotspot Name":"CCNR-Jelutong",
+        "Coordinates":[1.355797, 103.804836],
+        "Region":"SG",
+        "Radius":1500,
+        "Nearest Station":"None",
+        "Aliases": ["Central Catchment", "Jelutong"]
+    }, {
+        "Hotspot Name":"Changi East",
+        "Coordinates":[1.341162, 104.012221],
+        "Region":"SG",
+        "Radius":4000,
+        "Nearest Station":"Tanah Merah",
+        "Aliases": ["Tanah Merah", "Changi East", "Changi Beach", "Changi Airport"]
+    }, {
+        "Hotspot Name":"Clem Forest/Holland Green",
+        "Coordinates":[1.328326, 103.781179],
+        "Region":"SG",
+        "Radius":600,
+        "Nearest Station":"King Albert Park",
+        "Aliases": ["Clementi Forest", "Holland Green", "Bukit Timah Railway"]
+    }, {
+        "Hotspot Name":"Coney",
+        "Coordinates":[1.411902, 103.923491],
+        "Region":"SG",
+        "Radius":750,
+        "Nearest Station":"Punggol Coast",
+        "Aliases": ["Coney Island", "Serangoon Island"]
+    }, {
+        "Hotspot Name":"DFNP",
+        "Coordinates":[1.362892, 103.776061],
+        "Region":"SG",
+        "Radius":500,
+        "Nearest Station":"Hillview",
+        "Aliases": ["Dairy Farm"]
+    }, {
+        "Hotspot Name":"GBTB/Marina Grove",
+        "Coordinates":[1.27909, 103.86459],
+        "Region":"SG",
+        "Radius":700,
+        "Nearest Station":"Gardens by the Bay",
+        "Aliases": ["Satay", "Gardens by the Bay", "Gardens By The Bay", "GBTB"]
+    }, {
+        "Hotspot Name": "Hampstead",
+        "Coordinates":[ 1.409139,  103.870394],
+        "Region": "SG",
+        "Radius": 900,
+        "Nearest Station": "Thanggam",
+        "Aliases": ["Hampstead"]
+    }, {
+        "Hotspot Name":"JEG",
+        "Coordinates":[1.352220, 103.693282],
+        "Region":"SG",
+        "Radius":250,
+        "Nearest Station":"Boon Lay",
+        "Aliases": ["Potter's Garden", "Jurong Eco"]
+    }, {
+        "Hotspot Name":"JLG",
+        "Coordinates":[1.335992, 103.726962],
+        "Region":"SG",
+        "Radius":1100,
+        "Nearest Station":"None",
+        "Aliases": ["Jurong Lake", "Chinese Garden", "Japanese Garden", "JLG", "Jurong East", "Cloud pagoda"]
+    }, {
+        "Hotspot Name":"S'th Ridges (KR Nursery)",
+        "Coordinates":[1.283073, 103.793717],
+        "Region":"SG",
+        "Radius":750,
+        "Nearest Station":"Kent Ridge",
+        "Aliases": null
+    }, {
+        "Hotspot Name":"KRJ Marshes",
+        "Coordinates":[1.420837, 103.726857],
+        "Region":"SG",
+        "Radius":800,
+        "Nearest Station":"Yew Tee",
+        "Aliases": ["Kranji Marsh", "Turut Track", "Neo Tiew Road", "Neo Tiew Harvest"]
+    }, {
+        "Hotspot Name":"LBNR",
+        "Coordinates":[1.265978, 103.802676],
+        "Region":"SG",
+        "Radius":500,
+        "Nearest Station":"Labrador Park",
+        "Aliases": ["Labrador Nature"]
+    }, {
+        "Hotspot Name":"LSRP",
+        "Coordinates":[1.408899, 103.832284],
+        "Region":"SG",
+        "Radius":400,
+        "Nearest Station":"Khatib",
+        "Aliases": ["Lower Seletar"]
+    }, {
+        "Hotspot Name":"Lor. Halus",
+        "Coordinates":[1.392917, 103.927337],
+        "Region":"SG",
+        "Radius":800,
+        "Nearest Station":"Riviera",
+        "Aliases": ["Lorong Halus"]
+    }, {
+        "Hotspot Name":"MED",
+        "Coordinates":[1.28590, 103.87714],
+        "Region":"SG",
+        "Radius":600,
+        "Nearest Station":"Gardens by the Bay",
+        "Aliases": ["Bay East", "Breakwater", "MED", "Marina East", "Marina Gardens"]
+    }, {
+        "Hotspot Name":"KR (NUS)",
+        "Coordinates":[1.295516, 103.776328],
+        "Region":"SG",
+        "Radius":750,
+        "Nearest Station":"Kent Ridge",
+        "Aliases": ["National Uni"]
+    }, {
+        "Hotspot Name":"PRP",
+        "Coordinates":[1.38469, 103.953938],
+        "Region":"SG",
+        "Radius":1300,
+        "Nearest Station":"Pasir Ris",
+        "Aliases": ["Pasir Ris", "PRP", "api api", "Elias"]
+    }, {
+        "Hotspot Name":"SBG",
+        "Coordinates":[1.315091, 103.816538],
+        "Region":"SG",
+        "Radius":900,
+        "Nearest Station":"Botanic Gardens",
+        "Aliases": ["Botanic Gardens", "SBG", "Healing Garden", "Fragrant Garden", "Toxic Garden"]
+    }, {
+        "Hotspot Name":"SBWR",
+        "Coordinates":[1.443076, 103.730649],
+        "Region":"SG",
+        "Radius":800,
+        "Nearest Station":"Yew Tee",
+        "Aliases": ["Sungei Buloh", "SBWR"]
+    }, {
+        "Hotspot Name":"Sengkang Wetlands",
+        "Coordinates":[1.397791, 103.885023],
+        "Region":"SG",
+        "Radius":350,
+        "Nearest Station":"Farmway",
+        "Aliases": ["Sengkang Riverside", "Sengkang Floating"]
+    }, {
+        "Hotspot Name":"S'th Isles",
+        "Coordinates":[1.220898,  103.843670],
+        "Region":"SG",
+        "Radius":1650,
+        "Nearest Station":"Marina South Pier",
+        "Aliases": ["Kusu", "Southern Islands", "Singapore Strait"]
+    }, {
+        "Hotspot Name":"S'th Ridges (TBHP)",
+        "Coordinates":[1.271351, 103.819522],
+        "Region":"SG",
+        "Radius":700,
+        "Nearest Station":"Harbourfront",
+        "Aliases": ["Telok Blangah Hill", "Southern Ridges"]
+    }, {
+        "Hotspot Name":"S'th Ridges (Faber)",
+        "Coordinates":[1.278791, 103.809129],
+        "Region":"SG",
+        "Radius":700,
+        "Nearest Station":"Telok Blangah",
+        "Aliases": null
+    }, {
+        "Hotspot Name":"TEG",
+        "Coordinates":[1.362915, 103.948770],
+        "Region":"SG",
+        "Radius":500,
+        "Nearest Station":"Tampines",
+        "Aliases": ["Tampines Eco Green"]
+    }, {
+        "Hotspot Name":"Tuas (Port)",
+        "Coordinates":[1.262921, 103.625662],
+        "Region":"SG",
+        "Radius":1000,
+        "Nearest Station":"Tuas Crescent",
+        "Aliases": ["Tuas South"]
+    }, {
+        "Hotspot Name":"Tuas (W.)",
+        "Coordinates":[1.322514, 103.628535],
+        "Region":"SG",
+        "Radius":1000,
+        "Nearest Station":"Tuas Crescent",
+        "Aliases": ["Tuas West"]
+    }, {
+        "Hotspot Name":"Ubin (Chek Jawa)",
+        "Coordinates":[1.409382, 103.990120],
+        "Region":"SG",
+        "Radius":350,
+        "Nearest Station":"Pasir Ris",
+        "Aliases": ["Check Jawa"]
+    }, {
+        "Hotspot Name":"Ubin",
+        "Coordinates":[1.417073, 103.960250],
+        "Region":"SG",
+        "Radius":1750,
+        "Nearest Station":"Pasir Ris",
+        "Aliases": ["Ubin"]
+    }, {
+        "Hotspot Name":"Ulu Pandan",
+        "Coordinates":[1.323841, 103.757952],
+        "Region":"SG",
+        "Radius":600,
+        "Nearest Station":"Clementi",
+        "Aliases": ["Ulu Pandan"]
+    }, {
+        "Hotspot Name":"Windsor",
+        "Coordinates":[1.360201, 103.824234],
+        "Region":"SG",
+        "Radius":400,
+        "Nearest Station":"Bright Hill",
+        "Aliases": ["Windsor", "Venus Loop", "Venus Dr"]
+    }, {
+        "Hotspot Name":"WCP",
+        "Coordinates":[1.296829, 103.762982],
+        "Region":"SG",
+        "Radius":600,
+        "Nearest Station":"Clementi",
+        "Aliases": null
+    }
+]
