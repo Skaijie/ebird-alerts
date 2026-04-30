@@ -1,0 +1,37 @@
+{
+    "debug":
+        false,
+    "pause_script":
+        false,
+    "override_file_reading":
+        false,
+    "reset_file":
+        false,
+    "override_time":
+        false,
+    "offline_mode":
+        true,
+    "use_exclusion_list":
+        true,
+    "exclude_by_region":
+        false,
+    "night_sleep_mode":
+        true,
+    "refresh_rate":
+        15,
+    "night_refresh_rate":
+        60,
+    "hide_ticked_species":
+        true,
+    "hide_unconfirmed_sightings":
+        false,
+    "max_day_display":
+        7,
+    "regions":
+    [
+        "SG",
+        "TW-TPE"
+    ],
+    "single_list":
+        false
+}

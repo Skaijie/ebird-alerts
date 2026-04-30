@@ -1,3 +1,16 @@
+# Skai's
+telelink.py
+testing.py
+token.json
+credentials.json
+*.txt
+*.log
+email_bodies.pkl
+birds.code-workspace
+datasets/*
+!datasets/predefined_hotspots.json
+!datasets/stations.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -205,3 +218,5 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+/.vscode
+authentication.py
