@@ -35,22 +35,10 @@ class Species:
         self.need = need
         self.ignore_need = False
 
-    def check_region_need(self, region: str) -> Optional[bool]:
-        return region in self.need
-    def toggle_need(self, region: str, toggle: bool|None=None):
-        if toggle is None:
-            toggle = region not in self.need
-
-        if toggle:
-            self.need.add(region)
-        else:
-            self.need.discard(region)
-
     def get_need_prefix(self, region: Optional[str]=None) -> str:
         return "[N] " if ((not self.ignore_need) and
                          (region in self.need or
                           region is None and self.need)) else ""
-    
     
     def str_locations(self) -> str:
         return '\n'.join([str(sighting) for sighting in self.sightings])
@@ -107,7 +95,18 @@ def filter_sightings(species: Species, target_date: Optional[dt]=None, region: O
             filtered_sightings.add(sighting)
     return filtered_sightings
 
-def parse_excluded_species(lifer_sp_path: str, excluded_sp_path: str, name_lookup: speciesStore, sci_lookup: speciesStore):
+def parse_ebird_lifers(lifer_sp_path: str, sci_lookup: speciesStore) -> set[str]:
+    ebird_lifers = set(pd.read_csv(lifer_sp_path)["Scientific Name"].tolist())
+    excluded_species_strs = set()
+    
+    for lifer_str in ebird_lifers:
+        lifer = sci_lookup[lifer_str]
+        lifer.ignore_need = True
+        excluded_species_strs.add(lifer.common_name)
+    
+    return excluded_species_strs
+
+def update_excluded_species(lifer_sp_path: str, excluded_sp_path: str, name_lookup: speciesStore, sci_lookup: speciesStore):
     excluded_sp_sci_name = set(pd.read_csv(lifer_sp_path)["Scientific Name"].tolist())
     excluded_species = set()
     

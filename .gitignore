@@ -7,6 +7,7 @@ credentials.json
 *.log
 email_bodies.pkl
 birds.code-workspace
+Raw eBird Sightings
 datasets/*
 !datasets/predefined_hotspots.json
 !datasets/stations.csv
@@ -194,3 +195,4 @@ cython_debug/
 .cursorindexingignore
 /.vscode
 authentication.py
+eBird Data/rare_obs_SG.json
