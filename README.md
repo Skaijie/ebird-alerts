@@ -1,7 +1,7 @@
 # ebird-alerts
 (readme WIP)
 
-![alt text](/@Resources/bird widget snapshot.png)
+<img src="@Resources/bird widget snapshot.png" alt="Bird Widget header" width="800">
 
 A Rainmeter widget to show eBird rare/needs alerts.
 
