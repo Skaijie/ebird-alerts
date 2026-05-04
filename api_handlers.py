@@ -171,29 +171,7 @@ def call_api_gmail() -> tuple[list, int] | None:
 '''
 eBird API handlers
 '''
-
-def call_api_ebird_rare(region: str, alert_history_len: str) -> Optional[list[dict]]:
-    '''
-    Calls the API to retrieve bird sightings.
-    Used for rares alert and recent observations.
-    
-    :param url: The URL of the API to call.
-    :type url: str
-    :param region: The region of which to get eBird data for.
-    :type region: str
-    :param target_file: The file of which sighting details will be written to.
-    :type target_file: str
-    '''
-    rare_url = f"https://api.ebird.org/v2/data/obs/{region}/recent/notable?back={alert_history_len}&sppLocale=en_UK"
-    target_file = f"eBird Data\\rare_obs_{region}.json"
-    
-    logger.info(f'Calling API for rare alerts in region [{region}]')
-    sightings_ebird = call_api_ebird(rare_url)
-    save_json(target_file, sightings_ebird)
-    logger.info(f"Data loaded for region [{region}]")
-    return sightings_ebird
-    pass
-def call_api_ebird(url: str) -> Optional[list[dict]]:
+def call_api_ebird(url: str) -> Optional[list[dict] | bool]:
     '''
     Calls the eBird API to retrieve bird sighting data.
     
@@ -207,18 +185,20 @@ def call_api_ebird(url: str) -> Optional[list[dict]]:
         sightings_ebird: list[dict] = requests.request("GET", url, headers=headers, data=payload).json()
         return sightings_ebird
     except Exception as e:
-        logger.error(e)
-def load_offline_ebird(region: str) -> Optional[list[dict]]:
+        logger.error("call_api_ebird: ", e)
+        return False
+def load_offline_ebird(region: str) -> Optional[list[dict] | bool]:
     '''
     Called when configs["offline_mode"] == 1
     '''
     try:
-        target_file = f"eBird Data\\rare_obs_{region}.json"
+        target_file = f"Raw eBird Data\\rare_obs_{region}.json"
         logger.info(f'Calling data for {region} from file: {target_file}')
         sightings_ebird = load_json(target_file)
         return sightings_ebird
     except Exception as e:
-        logger.error(e)
+        logger.error("load_offline_ebird: ", e)
+        return False
 
 if __name__ == "__main__":
     if (gmail_data := call_api_gmail()):

@@ -71,7 +71,7 @@ def fmt_species_sighting_date(sightings: set) -> dict[str, dict[dt, str]]:
     return sighting_strings
 
 
-def validate_sighting(sighting: Sighting, config_store: configStore, validation_store: dict[str, list[dict]]) -> bool:
+def validate_sighting(sighting: Sighting, raw_data_store: dict[str, list[dict]]) -> bool:
     """
     Checks whether a sighting still exists in eBird via an API call.
     This is useful for checking if a sighting was removed and the same should be done in the widget database.
@@ -83,21 +83,9 @@ def validate_sighting(sighting: Sighting, config_store: configStore, validation_
         bool: Returns True if the sighting was found in eBird, otherwise returns False.
     """
     species_code = sighting.species.species_code
-    if species_code in validation_store:
-        ebird_data = validation_store[species_code]
-    else:
-        if "max_days" not in config_store:
-            config_store["max_days"] = 7 # default
-        species_url = f"https://api.ebird.org/v2/data/obs/{sighting.location.region}/recent/{sighting.species.species_code}?back={config_store['max_days']}&includeProvisional=true"
-        ebird_data = call_api_ebird(species_url)
-        if ebird_data:
-            print(ebird_data)
-            validation_store[species_code] = ebird_data
-    if ebird_data:
-        logger.debug("Existing sightings:\n" + str(ebird_data))
-        for ebird_sighting in ebird_data:
-            if sighting.checklist == ebird_sighting["subId"]:
-                return True
+    for rare_sighting in raw_data_store[sighting.location.region]:
+        if rare_sighting["subId"] == sighting.checklist and rare_sighting["speciesCode"] == species_code:
+            return True
     return False
 
 def gen_sighting(species: Sp, date: dt, location: Loc, confirmed: int, checklist: str, rare_sighting: Optional[bool], sighting_list: sightingStore) -> Optional[Sighting]:
@@ -120,8 +108,8 @@ def gen_sighting(species: Sp, date: dt, location: Loc, confirmed: int, checklist
         logging.info(f"Found an identical sighting at {str(existing_sighting.location)}")
         if confirmed:
             sighting_list[species_chash].confirmed = True
-        
         return
+    
     sighting = Sighting(species, species.sci_name, date, location, confirmed, checklist, rare_sighting)
     sighting_list[species_chash] = sighting
     species.sightings[species_chash] = sighting
@@ -155,12 +143,11 @@ def del_sighting_multi(species: Optional[Sp], date: Optional[dt], location: Opti
     
     del_condemned_sightings(condemned_sightings, sightings_store)
 
-def sightings_purge_old(sightings_store: sightingStore, config_store: configStore):
+def sightings_purge_old(sightings_store: sightingStore, raw_sightings_store: dict[str, list[dict]]):
     condemned_sightings: set[Sighting] = set()
-    validation_store = {}
     for sighting in sightings_store.values():
         if (sighting.date < (dt2.now() - timedelta(days=7)).date() or
-            (not sighting.confirmed and not validate_sighting(sighting, config_store, validation_store))):
+            (sighting.rare_sighting and not sighting.confirmed and not validate_sighting(sighting, raw_sightings_store))):
             condemned_sightings.add(sighting)
     
     del_condemned_sightings(condemned_sightings, sightings_store)

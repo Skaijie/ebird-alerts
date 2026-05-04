@@ -20,9 +20,9 @@ Time = collections.namedtuple("time_data", ("init_time", "init_date_str",
 "alert_cutoff_date", "alert_cutoff_date_str"))
 
 # Output and text parse
-def build_status_message(configs: configStore, is_night: int, error_flags: set|None=None):
+def build_status_message(configs: configStore, is_night: int, error_flags: dict[str, str]|None=None):
     text_status = f"Synced {dt2.strftime(dt2.now(), '%d %b %Y %H:%M')}\n"
-    if error_flags: text_status += "API error: " + ", ".join(error_flags) + "\n"
+    if error_flags: text_status += "API error: idk"
     
     if configs["debug"] == 1: text_status += "Debug mode on\n"
     elif configs["debug"] == 2: text_status += "Refreshed via VSCode\n"
@@ -116,6 +116,14 @@ def setup_sightings() -> sightingStore:
         sightings_dict = sightingStore()
     return sightings_dict
 
+def setup_hotspots():
+    HOTSPOTS_DEFAULTS_FILE = "datasets\\predefined_hotspots.json"
+    HOTSPOTS_FILE = "datasets\\generated_hotspots.pkl"
+    predefined_hotspots = load_json(HOTSPOTS_DEFAULTS_FILE)
+    if not (hotspot_list := load_pkl(HOTSPOTS_FILE)):
+        hotspot_list = []
+    return predefined_hotspots, hotspot_list
+
 def debug_console(com_lookup: speciesStore):
     while True:
         user_input = input("Check data for (species/sighting/location): ").lower()
@@ -143,7 +151,6 @@ def debug_console(com_lookup: speciesStore):
 
 def main():
     start_time = dt2.now()
-    HOTSPOTS_INIT_FILE = "datasets\\predefined_hotspots.json"
     HOTSPOTS_FILE = "datasets\\generated_hotspots.pkl"
     SIGHTINGS_FILE = "datasets\\sightings_list.pkl"
     '''SP_LIFER_FILE = "datasets\\ebird_world_life_list.csv"
@@ -151,20 +158,15 @@ def main():
     logger.info("Initialising updater")
     status_night = chk_night_mode()                                     # Check night status
     status_connection = chk_connection(config_data)                     # Check connection
-    hotspot_list = load_pkl(HOTSPOTS_FILE)                              # Load existing hotspots
-    if not hotspot_list:
-        hotspot_list = []
-    com_name_map = None
+    predefined_hotspots, hotspot_list = setup_hotspots()
     if status_connection:                                               # Prepare API status call
         build_status_message(config_data, status_night)                 # Update status
-        errors = set()
+        errors = {}
         species_dict = setup_taxonomy()
         sightings_dict = setup_sightings()
-        sightings_purge_old(sightings_dict, config_data)                # Delete "old" sightings
-        (sci_name_map, com_name_map) = map_names(species_dict)
+        sci_name_map, com_name_map = map_names(species_dict)
         """excluded_species = parse_excluded_species(
             SP_EXCLUSION_FILE, com_name_map, sci_name_map)              # Get excluded species"""
-        predefined_hotspots = load_json(HOTSPOTS_INIT_FILE)
         logger.info("Starting API calls...")
         sightings_notification = call_api_all(                          # Call APIs
             regions_data, species_dict, predefined_hotspots, hotspot_list,
@@ -182,8 +184,6 @@ def main():
     end_time = dt2.now()
     done = f'Done! Took {end_time - start_time}'
     logger.info(done)
-    if com_name_map:
-        debug_console(com_name_map)
     #show_loc_plot(get_gdf_generic(get_stn_df()), get_gdf_generic(get_hotspot_df(hotspot_list)))
     return done
 

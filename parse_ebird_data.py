@@ -6,7 +6,7 @@ from typing import Tuple, Optional
 from datetime import date as dt
 from sighting import sightingStore
 from json_handler import load_pkl
-from sighting import gen_sighting
+from sighting import gen_sighting, sightings_purge_old
 
 logger = logging.getLogger(__name__)
 DATE_RE = re.compile(r"Reported (.+?) by")
@@ -82,6 +82,7 @@ def parse_species_gmail(
         species.need.add(region)
         if (sighting := gen_sighting(species, date, loc, confirmed, checklist, None, sightings_store)):
             notify_list.add(sighting)
+            logger.debug(f"Added {str(sighting)}")
     return notify_list
       
 def load_offline_gmail(predefined_hotspots_store: list[dict], target_hotspot_store: list[Hotspot], sightings_store, sci_lookup: speciesStore, config_data: configStore):
@@ -95,11 +96,10 @@ def load_offline_gmail(predefined_hotspots_store: list[dict], target_hotspot_sto
     except Exception as e:
         logger.error(e)
 
-def parse_species_ebird(sightings_raw: list,
+def parse_species_ebird(raw_sightings: dict[str, list[dict]],
                         species_dict: speciesStore,
-                        predefined_store: list[dict],
+                        predefined_hotspots_store: list[dict],
                         target_hotspot_store: list[Hotspot],
-                        region: str,
                         sightings_store: sightingStore
     ) -> set:
     '''
@@ -117,23 +117,25 @@ def parse_species_ebird(sightings_raw: list,
     '''
     logger.info("Parsing data...")
     new_sightings = set()
-    for obs in sightings_raw:
-        species = species_dict[obs['speciesCode']]
-        if (species.ignore_need):
-            continue
-        location = gen_location(obs['locName'], (obs['lat'], obs['lng']), region, predefined_store, target_hotspot_store)
-        if (sighting := gen_sighting(
-            species,
-            dt.fromisoformat(obs['obsDt'][:10]),
-            location,
-            obs['obsReviewed'],
-            obs['subId'],
-            True,
-            sightings_store
-        )):
-            new_sightings.add(sighting)
-        
-    logger.info(f"eBird parsing finished for {region}")
+    for region, regional_sightings in raw_sightings.items():
+        for obs in regional_sightings:
+            species = species_dict[obs['speciesCode']]
+            if (species.ignore_need):
+                continue
+            location = gen_location(obs['locName'], (obs['lat'], obs['lng']), region, predefined_hotspots_store, target_hotspot_store)
+            if (sighting := gen_sighting(
+                species,
+                dt.fromisoformat(obs['obsDt'][:10]),
+                location,
+                obs['obsReviewed'],
+                obs['subId'],
+                True,
+                sightings_store
+            )):
+                new_sightings.add(sighting)
+        logger.info(f"eBird parsing finished for {region}")
+    
+    logger.info("eBird parsing finished")
     return new_sightings
 
 def load_offline_all(
@@ -145,8 +147,8 @@ def load_offline_all(
     sci_lookup: speciesStore,
     config_data: configStore):
     for region in regions:
-        if (offline_ebird := load_offline_ebird(region)):
-            parse_species_ebird(offline_ebird, target_alert_store, predefined_hotspots_store, target_hotspot_store, region, sightings_store)
+        if isinstance(offline_ebird := load_offline_ebird(region), dict):
+            parse_species_ebird({region: [offline_ebird]}, target_alert_store, predefined_hotspots_store, target_hotspot_store, sightings_store)
     
     if (offline_gmail := load_offline_gmail(predefined_hotspots_store, target_hotspot_store, sightings_store, sci_lookup, config_data)):
         parse_species_gmail(
@@ -158,35 +160,71 @@ def load_offline_all(
             config_data
         )
 
+def get_ebird_data(regions: set[str], error_list: dict, config_data: configStore) -> dict[str, list[dict]]:
+    '''
+    Calls the API to retrieve bird sightings.
+    Used for rares alert and recent observations.
+    
+    :param url: The URL of the API to call.
+    :type url: str
+    :param region: The region of which to get eBird data for.
+    :type region: str
+    :param target_file: The file of which sighting details will be written to.
+    :type target_file: str
+    '''
+    all_ebird_sightings = {}
+
+    for region in regions:
+        rare_url = f"https://api.ebird.org/v2/data/obs/{region}/recent/notable?back={config_data['max_days']}&sppLocale=en_UK&includeProvisional=true"
+        
+        logger.info(f'Calling API for rare alerts in region [{region}]')
+        regional_sightings = call_api_ebird(rare_url)
+        if regional_sightings is False:
+            error_list.setdefault("eBird", set()).add(region)
+            logger.error(f"Could not load eBird regional data for {region}")
+        else:
+            all_ebird_sightings[region] = regional_sightings
+            logger.info(f"Loaded eBird regional data for {region}")
+    
+    save_ebird_data(all_ebird_sightings)
+    return all_ebird_sightings
+
+def save_ebird_data(api_sightings: dict[str, list[dict]]):
+    for region, regional_sightings in api_sightings.items():
+        target_file = f"Raw eBird Data\\rare_obs_{region}.json"
+        save_json(target_file, regional_sightings)
+    
+def process_gmail_data(predefined_hotspots_store: list[dict],
+    target_hotspot_store: list[Hotspot],
+    sightings_store,
+    error_list: dict,
+    sciname_map: speciesStore,
+    config_data: configStore) -> set:
+    if (gmail_sightings := call_api_gmail()):
+        snippet_list = parse_species_snippets(gmail_sightings[0])
+        notify_list = parse_species_gmail(snippet_list,
+                predefined_hotspots_store, target_hotspot_store,
+                sightings_store,
+                sciname_map, config_data
+        )
+        set_timestamp_unix(gmail_sightings[1])
+    else:
+        error_list["Gmail"] = True
+    
+    return notify_list
+
 def call_api_all(
     regions: set[str], target_alert_store: speciesStore,
     predefined_hotspots_store: list[dict],
     target_hotspot_store: list[Hotspot],
     sightings_store,
-    error_list: set,
+    error_list: dict,
     sciname_map: speciesStore,
     config_data: configStore) -> set:
     notify_store = set()
-    for region in regions:
-        if (raw_sightings := call_api_ebird_rare(region, str(config_data["max_days"]))):
-            notify_store = parse_species_ebird(
-                raw_sightings,
-                target_alert_store, predefined_hotspots_store, target_hotspot_store,
-                region, sightings_store
-            )
-        else:
-            error_list.add(f"eBird {region}")
-    
-    if (gmail_data := call_api_gmail()):
-        snippet_list = parse_species_snippets(gmail_data[0])
-        notify_store = notify_store.union(
-            parse_species_gmail(snippet_list,
-                predefined_hotspots_store, target_hotspot_store,
-                sightings_store,
-                sciname_map, config_data
-            )
-        )
-        set_timestamp_unix(gmail_data[1])
-    else:
-        error_list.add("Gmail API")
-    return notify_store
+    all_ebird_api_sightings = get_ebird_data(regions, error_list, config_data)
+    new_ebird_api_sightings = parse_species_ebird(all_ebird_api_sightings, target_alert_store, predefined_hotspots_store, target_hotspot_store, sightings_store)
+    sightings_purge_old(sightings_store, all_ebird_api_sightings)
+    new_gmail_sightings = process_gmail_data(predefined_hotspots_store, target_hotspot_store, sightings_store, error_list, sciname_map, config_data)
+    new_sightings = new_ebird_api_sightings.union(new_gmail_sightings)
+    return new_sightings
