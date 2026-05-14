@@ -196,3 +196,5 @@ cython_debug/
 /.vscode
 authentication.py
 eBird Data/rare_obs_SG.json
+/Raw eBird Data
+external_tasks.py

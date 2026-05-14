@@ -34,7 +34,7 @@ def build_status_message(configs: configStore, is_night: int, error_flags: set|N
 def status_message():
     pass
 
-PATTERN_WRAPPER = re.compile(r"(\[[CU]\])|([\u4e00-\u9fff])|(\s)|(-)")
+PATTERN_WRAPPER = re.compile(r"(\s?\[C\])|([\u4e00-\u9fff])|(\s)|(-)")
 def wrap_text_with_correction(text: str, max_disp_chars: int) -> list[str]:
     """
     Splits text into lines based on display width corrections.
@@ -43,7 +43,7 @@ def wrap_text_with_correction(text: str, max_disp_chars: int) -> list[str]:
     newline_startidx = []
     
     for match in PATTERN_WRAPPER.finditer(text):
-        if match.group(1): # Confirmation status found, use index of next char, correct width by -4
+        if match.group(1): # Confirmation status found, use index of next char, correct width by length of match
             newline_startidx.append((match.end(), match.start() - match.end()))
         elif match.group(2): # CJK found, correct width by 1
             newline_startidx.append((match.start(), 1))
