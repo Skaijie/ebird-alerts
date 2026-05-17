@@ -117,30 +117,31 @@ def gen_sighting(species: Sp, date: dt, location: Loc, confirmed: int, checklist
 
 def del_condemned_sightings(condemned_sightings: set[Sighting], sightings_store: sightingStore):
     for sighting in condemned_sightings:
-        sp = sighting.species
-        del sp.sightings[sighting.chash]
-        del sightings_store[sighting.chash]
+        sighting.species.sightings.pop(sighting.chash, None)
+        sightings_store.pop(sighting.chash, None)
 
-def del_sighting_multi(species: Optional[Sp], date: Optional[dt], location: Optional[Loc], sightings_store: sightingStore):
+def del_sighting_multi(sightings_store: sightingStore, species: Optional[Sp], date: Optional[dt], location: Optional[Loc]):
     if not (species or date or location):
         logging.error("At least one parameter must be specified")
         return
-    condemned_sightings: set[Sighting] = set()
-    if species:
-        if (date and location):
-            for sighting in species.sightings:
-                if (sighting.date == date and sighting.location == location):
-                    condemned_sightings = {sighting}
-                    break
-        elif date:
-            condemned_sightings = {sighting for sighting in species.sightings if sighting.date == date}
-        elif location:
-            condemned_sightings = {sighting for sighting in species.sightings if sighting.location == location}
-    elif date:
-        condemned_sightings = {sighting for sighting in sightings_store.values() if sighting.date == date}
-    elif location:
-        condemned_sightings = {sighting for sighting in sightings_store.values() if sighting.location == location}
     
+    if (date and location) and not species:
+        logging.error("If date and location are specified, species must also be specified")
+        return
+    
+    search = species.sightings.values() if species else sightings_store.values()
+
+    condemned_sightings: set[Sighting] = set()
+
+    for sighting in search:
+        if (date and sighting.date != date) or (location and sighting.location != location):
+            continue
+        condemned_sightings.add(sighting)
+        if species and date and sighting:
+            break
+    else:
+        logging.warning("No sighting with the given parameters found.")
+
     del_condemned_sightings(condemned_sightings, sightings_store)
 
 def sightings_purge_old(sightings_store: sightingStore, raw_sightings_store: dict[str, list[dict]]):

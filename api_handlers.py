@@ -187,18 +187,6 @@ def call_api_ebird(url: str) -> Optional[list[dict] | bool]:
     except Exception as e:
         logger.error("call_api_ebird: ", e)
         return False
-def load_offline_ebird(region: str) -> Optional[list[dict] | bool]:
-    '''
-    Called when configs["offline_mode"] == 1
-    '''
-    try:
-        target_file = f"Raw eBird Data\\rare_obs_{region}.json"
-        logger.info(f'Calling data for {region} from file: {target_file}')
-        sightings_ebird = load_json(target_file)
-        return sightings_ebird
-    except Exception as e:
-        logger.error("load_offline_ebird: ", e)
-        return False
 
 if __name__ == "__main__":
     if (gmail_data := call_api_gmail()):

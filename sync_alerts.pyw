@@ -8,7 +8,7 @@ log_init(config_data)
 from api_handlers import *
 from location import *
 from species import Species as Sp, speciesStore, species_alert_prename, map_names
-from parse_ebird_data import call_api_all
+from parse_ebird_data import get_ebird_data, parse_species_ebird, process_gmail_data
 from sighting import sightingStore, sightings_purge_old, str_alert
 from datetime import date as dt, datetime as dt2
 from parse_taxonomy_file import taxonomy_to_obj
@@ -37,7 +37,7 @@ def status_message():
 PATTERN_WRAPPER = re.compile(r"(\[[CU]\])|([\u4e00-\u9fff])|(\s)|(-)")
 def wrap_text_with_correction(text: str, max_disp_chars: int) -> list[str]:
     """
-    Splits text into lines based on display width corrections.
+    Splits a single-line string into multiple lines based on word-wrapping.
     Returns a list of strings.
     """
     newline_startidx = []
@@ -103,24 +103,19 @@ def push_alert(sightings_store: set, is_notify: bool, region: Optional[str]=None
     if is_notify: Path("Notify\\notif.txt").write_text(alert_text, encoding="utf-8")
     else: Path(f"bird_alert_{region}.txt").write_text(alert_text, encoding="utf-8")
 
-def setup_taxonomy() -> speciesStore:
-    TAXO_FILE = "datasets\\eBird_taxonomy_v2025.csv"
-    SPECIES_FILE = "datasets\\ebird_taxonomy.pkl"
-    if not isinstance(species_dict := load_pkl(SPECIES_FILE), dict):
-        species_dict = taxonomy_to_obj(TAXO_FILE, SPECIES_FILE)
+def setup_taxonomy(taxo_file: str, species_file: str) -> speciesStore:
+    if not isinstance(species_dict := load_pkl(species_file), dict):
+        species_dict = taxonomy_to_obj(taxo_file, species_file)
     return species_dict
 
-def setup_sightings() -> sightingStore:
-    SIGHTINGS_FILE = "datasets\\sightings_list.pkl"
-    if not isinstance(sightings_dict := load_pkl(SIGHTINGS_FILE), dict):
+def setup_sightings(sightings_file: str) -> sightingStore:
+    if not isinstance(sightings_dict := load_pkl(sightings_file), dict):
         sightings_dict = sightingStore()
     return sightings_dict
 
-def setup_hotspots():
-    HOTSPOTS_DEFAULTS_FILE = "datasets\\predefined_hotspots.json"
-    HOTSPOTS_FILE = "datasets\\generated_hotspots.pkl"
-    predefined_hotspots = load_json(HOTSPOTS_DEFAULTS_FILE)
-    if not (hotspot_list := load_pkl(HOTSPOTS_FILE)):
+def setup_hotspots(hotspots_file: str, hotspots_predef_file: str):
+    predefined_hotspots = load_json(hotspots_predef_file)
+    if not (hotspot_list := load_pkl(hotspots_file)):
         hotspot_list = []
     return predefined_hotspots, hotspot_list
 
@@ -152,26 +147,30 @@ def debug_console(com_lookup: speciesStore):
 def main():
     start_time = dt2.now()
     HOTSPOTS_FILE = "datasets\\generated_hotspots.pkl"
+    HOTSPOTS_PREDEF_FILE = "datasets\\predefined_hotspots.json"
     SIGHTINGS_FILE = "datasets\\sightings_list.pkl"
+    TAXO_FILE = "datasets\\eBird_taxonomy_v2025.csv"
+    SPECIES_FILE = "datasets\\ebird_taxonomy.pkl"
     '''SP_LIFER_FILE = "datasets\\ebird_world_life_list.csv"
     SP_EXCLUSION_FILE = "species_excluded.txt"'''
     logger.info("Initialising updater")
     status_night = chk_night_mode()                                     # Check night status
     status_connection = chk_connection(config_data)                     # Check connection
-    predefined_hotspots, hotspot_list = setup_hotspots()
+    predefined_hotspots_list, hotspot_list = setup_hotspots(HOTSPOTS_FILE, HOTSPOTS_PREDEF_FILE)
     if status_connection:                                               # Prepare API status call
         build_status_message(config_data, status_night)                 # Update status
         errors = {}
-        species_dict = setup_taxonomy()
-        sightings_dict = setup_sightings()
+        species_dict = setup_taxonomy(TAXO_FILE, SPECIES_FILE)
+        sightings_dict = setup_sightings(SIGHTINGS_FILE)
         sci_name_map, com_name_map = map_names(species_dict)
         """excluded_species = parse_excluded_species(
             SP_EXCLUSION_FILE, com_name_map, sci_name_map)              # Get excluded species"""
         logger.info("Starting API calls...")
-        sightings_notification = call_api_all(                          # Call APIs
-            regions_data, species_dict, predefined_hotspots, hotspot_list,
-            sightings_dict, errors, sci_name_map, config_data
-        )
+        all_ebird_api_sightings = get_ebird_data(regions_data, errors, config_data)
+        new_ebird_api_sightings = parse_species_ebird(all_ebird_api_sightings, species_dict, predefined_hotspots_list, hotspot_list, sightings_dict)
+        sightings_purge_old(sightings_dict, all_ebird_api_sightings)
+        new_gmail_sightings = process_gmail_data(predefined_hotspots_list, hotspot_list, sightings_dict, errors, sci_name_map)
+        sightings_notification = new_ebird_api_sightings.union(new_gmail_sightings)
         save_pkl(HOTSPOTS_FILE, hotspot_list)
         save_pkl(SIGHTINGS_FILE, sightings_dict)
         build_status_message(config_data, status_night, errors)          # Update API call status
