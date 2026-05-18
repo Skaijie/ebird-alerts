@@ -20,10 +20,3 @@ Sightings that are not considered rare are always grey, since eBird does not rev
 
 # Settings
 ...
-
-# Known issues/to-do
-* Observations removed from the eBird database are not synced (can be fixed easier now that rare definition follows eBird's)
-* Some lifers are not registered as such (?)
-* Goofy repetition in sighting.del_sighting_multi()
-* Widget does not update the "Refreshing alerts" text
-* ...
