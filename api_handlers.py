@@ -1,5 +1,7 @@
 from base64 import urlsafe_b64decode
-import authentication, logging, re
+import authentication
+import logging
+import re
 from initialisations import *
 from json_handler import *
 from tqdm import tqdm
@@ -21,7 +23,7 @@ TOKEN_FILE = "token.json"
 
 # Text parsers
 
-def get_timestamp_unix_old() -> int:
+def get_last_recent_timestamp() -> int:
     '''
     Returns the unix timestamp of the previously processed email.
     '''
@@ -29,7 +31,7 @@ def get_timestamp_unix_old() -> int:
         return int(Path(LAST_PROCESSED_FILE).read_text().strip())
     except ValueError:
         return int(dt2.now().timestamp())
-def set_timestamp_unix(timestamp: int):
+def set_unix_timestamp(timestamp: int):
     Path(LAST_PROCESSED_FILE).write_text(str(timestamp))
     logger.debug("Wrote timestamp " + str(timestamp) + " to file")
 
@@ -78,58 +80,61 @@ def get_mail_body(payload) -> Optional[str]:
             if part_mime.startswith("multipart/") and "parts" in part:
                 stack.extend(part["parts"])
 
-def get_gmail_bodies(service, max_results: int=500) -> tuple[list, int]:
+def get_gmail_bodies(service, max_results: int=500, cutoff: int = 7) -> tuple[list, int]:
     """
     Fetches bodies of all 'photography' emails newer than the local record.
     Returns a list of strings (email bodies).
     """
-    email_store = "email_bodies.pkl"
-    timestamp_unix_old = get_timestamp_unix_old()
-    timestamp_unix_latest = timestamp_unix_old
+    cutoff = cutoff + 1         # Shift the cutoff date by 1, as the gmail request is sent as "after:date"
+    email_file = "email_bodies.pkl"
+    last_recent_timestamp = get_last_recent_timestamp()
+    unix_timestamp_latest = last_recent_timestamp
     email_bodies = []
     page_token = None
     regions_local = "Singapore"
-    cutoff_dt_gmail = (dt2.now() - timedelta(days=7)).strftime("%Y/%m/%d")
+    cutoff_dt_gmail = (dt2.now() - timedelta(days=cutoff)).strftime("%Y/%m/%d")
     logger.info("Getting mail list...")
     logger.debug(f"Cutoff date: {cutoff_dt_gmail}")
     
     while True:
         # List IDs of messages with the label
-        list_resp = (
-            service.users().messages().list(
-                userId="me",
-                q=f"{regions_local} label:photography after:{cutoff_dt_gmail}",
-                maxResults=max_results,
-                pageToken=page_token,
+        list_resp = service.users().messages().list(
+            userId="me",
+            q=f"{regions_local} label:photography after:{cutoff_dt_gmail}",
+            maxResults=max_results,
+            pageToken=page_token,
             ).execute()
-        )
         messages_meta = list_resp.get("messages", [])
         if not messages_meta:
             logger.info("No messages found.")
             break
         logger.info(f"Found {len(messages_meta)} messages, processing...\n")
-        iter_msgs = tqdm(messages_meta, unit=" mails", colour="green")
-        for msg_meta in iter_msgs:
-            full_msg = service.users().messages().get(
-                userId="me", id=msg_meta['id'], format='full' 
-            ).execute()
+        iter_mails = tqdm(messages_meta, unit=" mails", colour="green")
+        
+        for mail_meta in iter_mails:
+            full_msg = (service.users().messages()
+                            .get(userId="me", id=mail_meta['id'], format='full')
+                            .execute())
             
-            mail_timestamp_unix = int(full_msg['internalDate'])
-            # Check if this email is new
-            if mail_timestamp_unix <= timestamp_unix_old:
-                iter_msgs.close()
-                logger.info("Reached previously parsed email. Timestamp:" + str(mail_timestamp_unix))
+            current_mail_timestamp = int(full_msg['internalDate'])
+            
+            if current_mail_timestamp <= last_recent_timestamp: # Email 
+                iter_mails.close()
+                logger.info("Reached previously parsed email. Timestamp: " + str(current_mail_timestamp))
                 break
-            # Extract body immediately
-            if (body_text:= get_mail_body(full_msg.get("payload", {}))):
+            elif current_mail_timestamp > unix_timestamp_latest:
+                unix_timestamp_latest = current_mail_timestamp
+            
+            body_text = get_mail_body(full_msg.get("payload", {}))
+            if body_text:
                 email_bodies.append(body_text)
-            if mail_timestamp_unix > timestamp_unix_latest:
-                timestamp_unix_latest = mail_timestamp_unix
+        
         page_token = list_resp.get("nextPageToken")
         if not page_token:
             break
-    save_pkl(email_store, email_bodies)
-    return email_bodies, int(timestamp_unix_latest)
+    
+    save_pkl(email_file, email_bodies)
+    return email_bodies, int(unix_timestamp_latest)
 def parse_species_snippets(bodies: list[str]) -> list[list[str]]:
     logger.info("Parsing gmail bodies...")
     start_line = "eBird encourages safe, responsible birding."
@@ -185,11 +190,6 @@ def call_api_ebird(url: str) -> Optional[list[dict] | bool]:
         sightings_ebird: list[dict] = requests.request("GET", url, headers=headers, data=payload).json()
         return sightings_ebird
     except Exception as e:
-        logger.error("call_api_ebird: ", e)
+        logger.error("Failed to call the eBird API:")
+        logger.error(e)
         return False
-
-if __name__ == "__main__":
-    if (gmail_data := call_api_gmail()):
-        for b in gmail_data[0]:
-            print("--- Email Body ---")
-            print(b[:100] + "...")

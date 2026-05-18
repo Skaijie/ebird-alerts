@@ -1,4 +1,5 @@
-import collections, logging
+import collections
+import logging
 from initialisations import *
 
 CONFIG_FILE = "@Resources\\Settings.inc"
@@ -11,7 +12,6 @@ from species import Species as Sp, speciesStore, species_alert_prename, map_name
 from parse_ebird_data import get_ebird_data, parse_species_ebird, process_gmail_data
 from sighting import sightingStore, sightings_purge_old, str_alert
 from datetime import date as dt, datetime as dt2
-from parse_taxonomy_file import taxonomy_to_obj
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ Time = collections.namedtuple("time_data", ("init_time", "init_date_str",
 "alert_cutoff_date", "alert_cutoff_date_str"))
 
 # Output and text parse
-def build_status_message(configs: configStore, is_night: int, error_flags: dict[str, str]|None=None):
+def build_status_message(configs: configStore, is_night: int, error_flags: dict[str, str]|None = None):
     text_status = f"Synced {dt2.strftime(dt2.now(), '%d %b %Y %H:%M')}\n"
     if error_flags: text_status += "API error: idk"
     
@@ -74,7 +74,7 @@ def wrap_text_with_correction(text: str, max_disp_chars: int) -> list[str]:
         lines.append(text[line_start:])
         
     return lines
-def push_alert(sightings_store: set, is_notify: bool, region: Optional[str]=None):
+def push_alert(sightings_store: set, is_notify: bool, region: Optional[str] = None):
     if sightings_store:
         sightings_formatted: (
             dict[
@@ -103,9 +103,21 @@ def push_alert(sightings_store: set, is_notify: bool, region: Optional[str]=None
     if is_notify: Path("Notify\\notif.txt").write_text(alert_text, encoding="utf-8")
     else: Path(f"bird_alert_{region}.txt").write_text(alert_text, encoding="utf-8")
 
-def setup_taxonomy(taxo_file: str, species_file: str) -> speciesStore:
-    if not isinstance(species_dict := load_pkl(species_file), dict):
-        species_dict = taxonomy_to_obj(taxo_file, species_file)
+def setup_taxonomy(from_taxo_file: str, to_species_file: str) -> speciesStore:
+    species_dict: speciesStore = {}
+    try:
+        with open(from_taxo_file, newline="", encoding="utf-8") as f:
+            for row in DictReader(f):
+                species_code = row["SPECIES_CODE"]
+                if species_code not in species_dict:
+                    species_dict[species_code] = Sp(species_code, row["PRIMARY_COM_NAME"], row["SCI_NAME"], set())
+                if (parent_species := row["REPORT_AS"]):
+                    species_dict[species_code].parent = parent_species
+        
+        save_pkl(to_species_file, species_dict)
+    except Exception as e:
+        logging.error("Failed to parse taxonomy file:")
+        logging.error(e)
     return species_dict
 
 def setup_sightings(sightings_file: str) -> sightingStore:

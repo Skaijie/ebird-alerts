@@ -59,13 +59,13 @@ def load_offline_gmail(predefined_hotspots: list[dict], hotspots: list[Hotspot],
 
 def process_gmail_data(predefined_hotspots: list[dict], hotspots: list[Hotspot], sightings: sightingStore, errors: dict, sciname_map: speciesStore) -> set:
     if (gmail_sightings := call_api_gmail()):
-        snippet_list     = parse_species_snippets(gmail_sightings[0])
-        notify_list      = parse_species_gmail(snippet_list, predefined_hotspots, hotspots, sightings, sciname_map)
-        set_timestamp_unix(gmail_sightings[1])
+        snippets = parse_species_snippets(gmail_sightings[0])
+        notify_sightings = parse_species_gmail(snippets, predefined_hotspots, hotspots, sightings, sciname_map)
+        set_unix_timestamp(gmail_sightings[1])
     else:
         errors["Gmail"] = True
-    
-    return notify_list
+        notify_sightings = set()
+    return notify_sightings
 
 def parse_species_gmail(
         snippets: list[list[str]], predefined_hotspots: list[dict], hotspots: list[Hotspot], sightings: sightingStore, sci_lookup: speciesStore) -> set:
@@ -81,7 +81,7 @@ def parse_species_gmail(
     :param chk_dupe: Whether to assume that the species is a duplicate of an existing one in the list (for recent sightings).
     :type chk_dupe: bool
     '''
-    notify_list = set()
+    notify_sightings = set()
 
     for snip in snippets:
         try:
@@ -110,10 +110,10 @@ def parse_species_gmail(
         loc = gen_location(loc_line, coords, region, predefined_hotspots, hotspots)
 
         if (sighting := gen_sighting(species, date, loc, confirmed, checklist, None, sightings)):
-            notify_list.add(sighting)
+            notify_sightings.add(sighting)
             logger.debug(f"New sighting for notification: {str(sighting)}")
 
-    return notify_list
+    return notify_sightings
     
 def parse_species_ebird(raw_sightings: dict[str, list[dict]], all_species: speciesStore, predefined_hotspots: list[dict], hotspots: list[Hotspot], sightings: sightingStore) -> set:
     '''

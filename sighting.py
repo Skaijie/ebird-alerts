@@ -4,7 +4,6 @@ from location import Location as Loc
 from api_handlers import call_api_ebird
 from typing import Optional, TypeAlias
 from datetime import datetime as dt2, timedelta
-from initialisations import configStore
 import logging
 
 logger = logging.getLogger(__name__)

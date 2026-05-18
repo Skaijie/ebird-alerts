@@ -1,4 +1,8 @@
-import logging, os, sys, re, requests
+import logging
+import os
+import sys
+import re
+import requests
 from time import sleep
 from traceback import extract_tb
 from configparser import ConfigParser
@@ -180,7 +184,7 @@ def char_diff_check(str_1: str, str_2: str) -> float:
         return None
     diff = sum(c1 != c2 for c1, c2 in zip(str_1, str_2))
     return diff + abs(len(str_1) - len(str_2))
-def toggle_flag(current: bool, new_value: bool|None=None) -> bool:
+def toggle_flag(current: bool, new_value: bool|None = None) -> bool:
     if isinstance(new_value, bool):
         return new_value
     return not current

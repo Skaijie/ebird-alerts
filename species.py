@@ -8,7 +8,7 @@ sightingsDict: TypeAlias = dict[tuple[dt, Hotspot], int]
 confirmation_status: dict = {0: "[U]", 1: "[C]"}
 @total_ordering
 class Species:
-    def __init__(self, species_code: str, common_name: str, sci_name: str, need: set[str], parent: str | None=None):
+    def __init__(self, species_code: str, common_name: str, sci_name: str, need: set[str], parent: str | None = None):
         '''
         Creates a Species class for a bird species, as defined by eBird.
         
@@ -35,7 +35,7 @@ class Species:
         self.need = need
         self.ignore_need = False
 
-    def get_need_prefix(self, region: Optional[str]=None) -> str:
+    def get_need_prefix(self, region: Optional[str] = None) -> str:
         return "[N] " if ((not self.ignore_need) and
                          (region in self.need or
                           region is None and self.need)) else ""
@@ -59,6 +59,7 @@ class Species:
         return f"{self.common_name} ({self.sci_name}, ID {self.species_code})\nNeed: {str(self.need)}\nIgnore need: {self.ignore_need}\nSightings: {self.str_locations()}"
 
 speciesStore: TypeAlias = dict[str, Species]
+
 # -------------------------
 # Species parser functions
 # -------------------------
@@ -82,9 +83,9 @@ def map_names(target_store: speciesStore) -> tuple[speciesStore, speciesStore]:
         name_lookup[species.common_name.lower()] = species
     return sci_lookup, name_lookup
 
-def species_alert_prename(species: Species, region: Optional[str]=None) -> str:
+def species_alert_prename(species: Species, region: Optional[str] = None) -> str:
     return f"{species.get_need_prefix(region)}{species.common_name}: "
-def filter_sightings(species: Species, target_date: Optional[dt]=None, region: Optional[str]=None, confirmed: bool=False) -> set:
+def filter_sightings(species: Species, target_date: Optional[dt] = None, region: Optional[str] = None, confirmed: bool = False) -> set:
     filtered_sightings: set = set()
     if not filtered_sightings:
         for sighting in species.sightings:
