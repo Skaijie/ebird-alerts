@@ -136,15 +136,26 @@ def parse_species_ebird(raw_sightings: dict[str, list[dict]], all_species: speci
         for obs in regional_sightings:
             species = all_species[obs['speciesCode']]
             
-            if (species.ignore_need):
+            if species.ignore_need:
                 continue
 
-            location = gen_location(obs['locName'], (obs['lat'], obs['lng']), region, predefined_hotspots, hotspots)
+            location = gen_location(obs['locName'],
+                                    (obs['lat'], obs['lng']),
+                                    region,
+                                    predefined_hotspots,
+                                    hotspots)
 
-            if (sighting := gen_sighting(species, dt.fromisoformat(obs['obsDt'][:10]), location, obs['obsReviewed'], obs['subId'], True, sightings)):
+            if (sighting := gen_sighting(species,
+                                         dt.fromisoformat(obs['obsDt'][:10]),
+                                         location,
+                                         obs['obsReviewed'],
+                                         obs['subId'],
+                                         True,
+                                         sightings)):
                 new_sightings.add(sighting)
         
         logger.info(f"eBird parsing finished for {region}")
+        
     logger.info("eBird parsing finished")
     return new_sightings
 

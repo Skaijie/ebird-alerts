@@ -85,7 +85,7 @@ def get_gmail_bodies(service, max_results: int=500, cutoff: int = 7) -> tuple[li
     Fetches bodies of all 'photography' emails newer than the local record.
     Returns a list of strings (email bodies).
     """
-    cutoff = cutoff + 1         # Shift the cutoff date by 1, as the gmail request is sent as "after:date"
+    cutoff = cutoff + 1     # Shift the cutoff date by 1, as the gmail request is sent as "after:date"
     email_file = "email_bodies.pkl"
     last_recent_timestamp = get_last_recent_timestamp()
     unix_timestamp_latest = last_recent_timestamp
@@ -93,9 +93,8 @@ def get_gmail_bodies(service, max_results: int=500, cutoff: int = 7) -> tuple[li
     page_token = None
     regions_local = "Singapore"
     cutoff_dt_gmail = (dt2.now() - timedelta(days=cutoff)).strftime("%Y/%m/%d")
-    logger.info("Getting mail list...")
-    logger.debug(f"Cutoff date: {cutoff_dt_gmail}")
     
+    logger.info(f"Getting all mails sent after {cutoff_dt_gmail}")
     while True:
         # List IDs of messages with the label
         list_resp = service.users().messages().list(
@@ -105,9 +104,11 @@ def get_gmail_bodies(service, max_results: int=500, cutoff: int = 7) -> tuple[li
             pageToken=page_token,
             ).execute()
         messages_meta = list_resp.get("messages", [])
-        if not messages_meta:
+        
+        if not messages_meta: 
             logger.info("No messages found.")
             break
+        
         logger.info(f"Found {len(messages_meta)} messages, processing...\n")
         iter_mails = tqdm(messages_meta, unit=" mails", colour="green")
         
@@ -135,23 +136,32 @@ def get_gmail_bodies(service, max_results: int=500, cutoff: int = 7) -> tuple[li
     
     save_pkl(email_file, email_bodies)
     return email_bodies, int(unix_timestamp_latest)
+
 def parse_species_snippets(bodies: list[str]) -> list[list[str]]:
     logger.info("Parsing gmail bodies...")
-    start_line = "eBird encourages safe, responsible birding."
-    end_line = "***********"
+    head = "eBird encourages safe"
+    tail = "***********"
 
     snippets = []
     for body in bodies:
-        start_idx = body.find(start_line) # Find the line before the species details
-        if start_idx == -1:
+        head_idx = body.find(head) # Find the line before the species details
+        if head_idx == -1:
+            logging.warning("No header text found. Skipping email")
             continue
-        end_idx = body.find(end_line, start_idx) # Find the end line (*********)
         
+        tail_idx = body.find(tail, head_idx + 1) # Find the end line (*********)
+        if tail_idx == -1:
+            logging.warning("No footer text found. Skipping email")
+            continue
+        
+        for line in body[head_idx+1:tail_idx]:
+            pass
+            
         observation_list = list(
             map( # 
                 lambda snip: [line.strip() for line in snip.splitlines() if (line.strip())], # Get non-empty lines
                 re.split(r"\n\s*\n(?=(?:.*?\(.*?\) \(.*?\))|\*)", # Use regex to determine species snips
-                body[start_idx:end_idx])[1:] # Search in culled part of body
+                body[head_idx:tail_idx])[1:] # Search in culled part of body
             )
         )
         for snip in observation_list:
