@@ -17,7 +17,7 @@ class Sighting:
         self.confirmed = confirmed
         self.checklist: str = checklist
         self.rare_sighting: Optional[bool] = rare_sighting
-        self.chash = self.species_name.rstrip(" ") + self.location.name
+        self.chash = self.species_name.rstrip(" ") + self.location.name + self.date.isoformat()
     
     def str_confirmed(self, alert: bool=False) -> str:
         if not self.confirmed: return ""
@@ -72,7 +72,7 @@ def fmt_species_sighting_date(sightings: set) -> dict[str, dict[dt, str]]:
 
 def validate_sighting(sighting: Sighting, raw_data_store: dict[str, list[dict]]) -> bool:
     """
-    Checks whether a sighting still exists in eBird via an API call.
+    Checks whether a sighting still exists in eBird.
     This is useful for checking if a sighting was removed and the same should be done in the widget database.
 
     Args:
@@ -81,6 +81,9 @@ def validate_sighting(sighting: Sighting, raw_data_store: dict[str, list[dict]])
     Returns:
         bool: Returns True if the sighting was found in eBird, otherwise returns False.
     """
+    if sighting.rare_sighting == False:
+        logging.warning("Sighting is not rare")
+        return True
     species_code = sighting.species.species_code
     for rare_sighting in raw_data_store[sighting.location.region]:
         if rare_sighting["subId"] == sighting.checklist and rare_sighting["speciesCode"] == species_code:
@@ -102,11 +105,12 @@ def gen_sighting(species: Sp, date: dt, location: Loc, confirmed: int, checklist
     Returns:
         Optional[Sighting]: The sighting itself if one was generated.
     """
-    if (species_chash := (species.sci_name.rstrip(" ") + location.name)) in sighting_list:
+    species_chash = species.sci_name.rstrip(" ") + location.name + date.isoformat()
+    if species_chash in sighting_list:
         existing_sighting = sighting_list[species_chash]
         logging.info(f"Found an identical sighting at {str(existing_sighting.location)}")
         if confirmed:
-            sighting_list[species_chash].confirmed = True
+            sighting_list[species_chash].confirmed = True # Update existing sighting to true if any sighting was confirmed for that date
         return
     
     sighting = Sighting(species, species.sci_name, date, location, confirmed, checklist, rare_sighting)
@@ -138,7 +142,7 @@ def del_sighting_multi(sightings_store: sightingStore, species: Optional[Sp], da
         condemned_sightings.add(sighting)
         if species and date and sighting:
             break
-    else:
+    else: # iterated through all sightings without finding a target
         logging.warning("No sighting with the given parameters found.")
 
     del_condemned_sightings(condemned_sightings, sightings_store)
@@ -146,8 +150,14 @@ def del_sighting_multi(sightings_store: sightingStore, species: Optional[Sp], da
 def sightings_purge_old(sightings_store: sightingStore, raw_sightings_store: dict[str, list[dict]]):
     condemned_sightings: set[Sighting] = set()
     for sighting in sightings_store.values():
-        if (sighting.date < (dt2.now() - timedelta(days=7)).date() or
-            (sighting.rare_sighting and not sighting.confirmed and not validate_sighting(sighting, raw_sightings_store))):
+        if (
+            sighting.date < (dt2.now() - timedelta(days=7)).date()
+            or (
+                sighting.rare_sighting
+                and not sighting.confirmed
+                and not validate_sighting(sighting, raw_sightings_store)
+                )
+            ):
             condemned_sightings.add(sighting)
     
     del_condemned_sightings(condemned_sightings, sightings_store)
@@ -158,21 +168,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
-'''
-Species
-    comName
-    sciName
-    eID
-    need = set of regions
-    sightings = set()
-    
-Sighting
-UFDS by date
-    Sp = species
-    dt = date
-    Loc = location
-    bool = confirmed
-    str = checklist
-    Optional[bool] = rare_sighting
-'''
