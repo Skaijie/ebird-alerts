@@ -110,7 +110,7 @@ def gen_sighting(species: Sp, date: dt, location: Loc, confirmed: int, checklist
         existing_sighting = sighting_list[species_chash]
         logging.info(f"Found an identical sighting at {str(existing_sighting.location)}")
         if confirmed:
-            sighting_list[species_chash].confirmed = True # Update existing sighting to true if any sighting was confirmed for that date
+            sighting_list[species_chash].confirmed = 1 # Update existing sighting to true if any sighting was confirmed for that date
         return
     
     sighting = Sighting(species, species.sci_name, date, location, confirmed, checklist, rare_sighting)
@@ -163,8 +163,7 @@ def sightings_purge_old(sightings_store: sightingStore, raw_sightings_store: dic
     del_condemned_sightings(condemned_sightings, sightings_store)
 
 def main():
-    data = call_api_ebird(f"https://api.ebird.org/v2/data/obs/geo/recent/whbyuh1?lat=1.4095070&lng=103.9888647477404&back=14&includeProvisional=true")
-    print(data)
+    pass
 
 if __name__ == "__main__":
     main()
